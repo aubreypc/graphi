@@ -35,7 +35,7 @@ class Field:
                 if argname == "return":
                     continue
                 default = func_sig.parameters[argname].default
-                if isinstance(default, _empty):  # Function signature has no default val
+                if default is _empty:  # Function signature has no default val
                     default = None
                 arg = Argument(argname, argtype, default=default)
                 self.args.append(arg)
@@ -50,13 +50,15 @@ class Field:
         if self.is_function():
             if self.func is None:
                 raise MethodNotImplemented(f"Function {self.name} is not implemented")
-            elif not isinstance(value, dict):
+            elif not isinstance(data, dict):
                 raise TypeError(
                     f"Argument to Field.validate must be a dict of arguments when field is a function"
                 )
             for arg in self.args:
-                if arg not in data:
-                    raise NullArgument(f"Missing argument {arg} for function {self.name}")
+                if arg not in data and not arg.default:
+                    raise NullArgument(
+                        f"Missing argument {arg} for function {self.name}"
+                    )
         elif not isinstance(data, self.fieldtype):
             raise TypeError(
                 f"Received {type(data)} for field {self.name}; {self.fieldtype} expected"
