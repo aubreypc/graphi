@@ -16,7 +16,7 @@ class Field:
     def __init__(
         self,
         name: str,
-        field_type=None,
+        fieldtype=None,
         func: Callable = None,
         args: List[Argument] = None,
         returntype=None,
@@ -24,7 +24,7 @@ class Field:
     ):
         self.name = name
         self.nullable = nullable
-        self.field_type = field_type
+        self.fieldtype = fieldtype
         self.func = func
         if func and func.__annotations__:
             # Infer the arguments and return type from func's type annotations
@@ -43,9 +43,14 @@ class Field:
     def is_function(self):
         return self.args != [] and self.returntype is not None
 
-    def validate(self, data):
-        if self.is_function() and self.func is None:
-            raise MethodNotImplemented(f"Function {self.name} is not implemented")
+    def validate(self, value):
+        if self.is_function():
+            if self.func is None:
+                raise MethodNotImplemented(f"Function {self.name} is not implemented")
+            elif not isinstance(value, dict):
+                raise TypeError(f"Argument to Field.validate must be a dict of arguments when field is a function")
+        elif not isinstance(value, self.fieldtype):
+            raise TypeError(f"Received {type(value)} for field {self.name}; {self.fieldtype} expected")
         return True
 
 
@@ -57,3 +62,5 @@ class GraphQLType:
         for field in self.fields:
             if field.name not in data and not field.nullable:
                 raise Exception(f"{field.name} is a required field")
+            field.validate(data[field.name])
+        return True
