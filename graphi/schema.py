@@ -1,5 +1,6 @@
 """ Objects for working with GraphQL schemas """
-from typing import List, Callable
+
+from typing import List, Dict, Callable
 
 
 class Argument:
@@ -14,10 +15,10 @@ class Field:
     def __init__(
         self,
         name: str,
-        field_type = None,
-        func: Callable = None, 
+        field_type=None,
+        func: Callable = None,
         arguments: List[Argument] = None,
-        returntype = None,
+        returntype=None,
         nullable: bool = True,
     ):
         self.name = name
@@ -37,11 +38,21 @@ class Field:
         else:
             self.arguments = arguments
             self.returntype = returntype
-    
+
+    def is_function(self):
+        return self.arguments != [] and self.returntype is not None
+
     def validate(self, data):
-        pass
+        if self.is_function() and self.func is None:
+            raise Exception(f"Function {self.name} is not implemented")
+        return True
 
 
 class GraphQLType:
     def __init__(self, fields: List[Field]):
         self.fields = fields
+
+    def validate(self, data: Dict):
+        for field in self.fields:
+            if field.name not in data and not field.nullable:
+                raise Exception(f"{field.name} is a required field")
