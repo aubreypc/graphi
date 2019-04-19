@@ -1,5 +1,5 @@
 class MethodNotImplemented(Exception): pass
 
-class NullField(Exception): pass
+class MissingRequiredField(Exception): pass
 
-class NullArgument(Exception): pass
+class MissingRequiredArgument(Exception): pass

@@ -2,7 +2,11 @@
 
 import pytest
 from graphi.schema import GraphQLType, Field, Argument
-from graphi.exceptions import MethodNotImplemented, NullArgument
+from graphi.exceptions import (
+    MethodNotImplemented,
+    MissingRequiredArgument,
+    MissingRequiredField,
+)
 
 
 def test_field_infer_function():
@@ -42,11 +46,13 @@ def test_field_validate_function_null_argument():
 
     my_field = Field("my_field", func=my_func)
     assert not my_field.args[0].default
-    with pytest.raises(NullArgument) as exc_info:
+    with pytest.raises(MissingRequiredArgument) as exc_info:
         assert not my_field.validate({"num": 1})
 
 
-@pytest.mark.skip(True, reason="Not implemented")
 def test_type_validate_null_field():
     """ GraphQLType should raise an exception when validating if a non-nullable field is missing """
-    pass
+    my_field = Field("my_field", fieldtype=int, nullable=False)
+    my_type = GraphQLType([my_field])
+    with pytest.raises(MissingRequiredField) as exc_info:
+        assert not my_type.validate({})

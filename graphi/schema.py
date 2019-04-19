@@ -2,7 +2,11 @@
 
 from typing import List, Dict, Callable
 from inspect import signature, _empty
-from .exceptions import MethodNotImplemented, NullField, NullArgument
+from .exceptions import (
+    MethodNotImplemented,
+    MissingRequiredField,
+    MissingRequiredArgument,
+)
 
 
 class Argument:
@@ -56,7 +60,7 @@ class Field:
                 )
             for arg in self.args:
                 if arg not in data and not arg.default:
-                    raise NullArgument(
+                    raise MissingRequiredArgument(
                         f"Missing argument {arg} for function {self.name}"
                     )
         elif not isinstance(data, self.fieldtype):
@@ -73,6 +77,6 @@ class GraphQLType:
     def validate(self, data: Dict):
         for field in self.fields:
             if field.name not in data and not field.nullable:
-                raise NullField(f"{field.name} is a required field")
+                raise MissingRequiredField(f"{field.name} is a required field")
             field.validate(data[field.name])
         return True
