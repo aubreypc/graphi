@@ -1,7 +1,8 @@
 """ Objects for working with GraphQL schemas """
 
 from typing import List, Dict, Callable
-from .exceptions import MethodNotImplemented
+from inspect import signature, _empty
+from .exceptions import MethodNotImplemented, NullField
 
 
 class Argument:
@@ -9,7 +10,6 @@ class Argument:
         self.name = name
         self.type = argtype
         self.default = default
-        self.required = default is None
 
 
 class Field:
@@ -30,11 +30,14 @@ class Field:
             # Infer the arguments and return type from func's type annotations
             self.args = []
             self.returntype = func.__annotations__["return"]
+            func_sig = signature(func)
             for argname, argtype in func.__annotations__.items():
                 if argname == "return":
                     continue
-                # TODO: pass default value to Argument
-                arg = Argument(argname, argtype)
+                default = func_sig.parameters[argname].default
+                if isinstance(default, _empty):  # Function signature has no default val
+                    default = None
+                arg = Argument(argname, argtype, default=default)
                 self.args.append(arg)
         else:
             self.args = args
@@ -48,9 +51,13 @@ class Field:
             if self.func is None:
                 raise MethodNotImplemented(f"Function {self.name} is not implemented")
             elif not isinstance(value, dict):
-                raise TypeError(f"Argument to Field.validate must be a dict of arguments when field is a function")
+                raise TypeError(
+                    f"Argument to Field.validate must be a dict of arguments when field is a function"
+                )
         elif not isinstance(value, self.fieldtype):
-            raise TypeError(f"Received {type(value)} for field {self.name}; {self.fieldtype} expected")
+            raise TypeError(
+                f"Received {type(value)} for field {self.name}; {self.fieldtype} expected"
+            )
         return True
 
 
@@ -61,6 +68,6 @@ class GraphQLType:
     def validate(self, data: Dict):
         for field in self.fields:
             if field.name not in data and not field.nullable:
-                raise Exception(f"{field.name} is a required field")
+                raise NullField(f"{field.name} is a required field")
             field.validate(data[field.name])
         return True
