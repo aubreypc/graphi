@@ -2,7 +2,7 @@
 
 from typing import List, Dict, Callable
 from inspect import signature, _empty
-from .exceptions import MethodNotImplemented, NullField
+from .exceptions import MethodNotImplemented, NullField, NullArgument
 
 
 class Argument:
@@ -46,7 +46,7 @@ class Field:
     def is_function(self):
         return self.args != [] and self.returntype is not None
 
-    def validate(self, value):
+    def validate(self, data):
         if self.is_function():
             if self.func is None:
                 raise MethodNotImplemented(f"Function {self.name} is not implemented")
@@ -54,9 +54,12 @@ class Field:
                 raise TypeError(
                     f"Argument to Field.validate must be a dict of arguments when field is a function"
                 )
-        elif not isinstance(value, self.fieldtype):
+            for arg in self.args:
+                if arg not in data:
+                    raise NullArgument(f"Missing argument {arg} for function {self.name}")
+        elif not isinstance(data, self.fieldtype):
             raise TypeError(
-                f"Received {type(value)} for field {self.name}; {self.fieldtype} expected"
+                f"Received {type(data)} for field {self.name}; {self.fieldtype} expected"
             )
         return True
 
