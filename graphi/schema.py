@@ -1,6 +1,7 @@
 """ Objects for working with GraphQL schemas """
 
 from typing import List, Dict, Callable
+from .exceptions import MethodNotImplemented
 
 
 class Argument:
@@ -17,7 +18,7 @@ class Field:
         name: str,
         field_type=None,
         func: Callable = None,
-        arguments: List[Argument] = None,
+        args: List[Argument] = None,
         returntype=None,
         nullable: bool = True,
     ):
@@ -27,24 +28,24 @@ class Field:
         self.func = func
         if func and func.__annotations__:
             # Infer the arguments and return type from func's type annotations
-            self.arguments = []
+            self.args = []
             self.returntype = func.__annotations__["return"]
             for argname, argtype in func.__annotations__.items():
                 if argname == "return":
                     continue
                 # TODO: pass default value to Argument
                 arg = Argument(argname, argtype)
-                self.arguments.append(arg)
+                self.args.append(arg)
         else:
-            self.arguments = arguments
+            self.args = args
             self.returntype = returntype
 
     def is_function(self):
-        return self.arguments != [] and self.returntype is not None
+        return self.args != [] and self.returntype is not None
 
     def validate(self, data):
         if self.is_function() and self.func is None:
-            raise Exception(f"Function {self.name} is not implemented")
+            raise MethodNotImplemented(f"Function {self.name} is not implemented")
         return True
 
 
