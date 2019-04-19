@@ -2,7 +2,7 @@
 
 import pytest
 from graphi.schema import GraphQLType, Field, Argument
-from graphi.exceptions import MethodNotImplemented
+from graphi.exceptions import MethodNotImplemented, NullArgument
 
 
 def test_field_infer_function():
@@ -32,3 +32,21 @@ def test_field_validate_function_not_implemented():
         args = (Argument("name", str), Argument("num", int))
         my_field = Field("my_field", args=args, returntype=str)
         assert not my_field.validate({"name": "Simone", "num": 1})
+
+
+def test_field_validate_function_null_argument():
+    """ Field object should raise an exception when validating a function with a missing argument """
+
+    def my_func(name_no_default: str, num: int = 1) -> str:
+        return f"{name_no_default} is #{num}!"
+
+    my_field = Field("my_field", func=my_func)
+    assert not my_field.args[0].default
+    with pytest.raises(NullArgument) as exc_info:
+        assert not my_field.validate({"num": 1})
+
+
+@pytest.mark.skip(True, reason="Not implemented")
+def test_type_validate_null_field():
+    """ GraphQLType should raise an exception when validating if a non-nullable field is missing """
+    pass
