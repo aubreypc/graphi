@@ -5,17 +5,18 @@ from graphi.schema import GraphQLType, Field, Argument
 from graphi.exceptions import MethodNotImplemented
 
 
-def test_field_infer_function_type():
-    """ Field object should infer arguments and return types from type annotations """
+def test_field_infer_function():
+    """ Field object should infer arguments, default values, and return types from type annotations """
 
-    def my_func(name: str, num: int) -> str:
+    def my_func(name: str = "Simone", num: int = 1) -> str:
         return f"{name} is #{num}!"
 
     my_field = Field("my_field", func=my_func)
     assert my_field.is_function()
-    assert my_field.args
     assert my_field.args[0].type is str
+    assert my_field.args[0].default == "Simone"
     assert my_field.args[1].type is int
+    assert my_field.args[1].default == 1
 
 
 def test_field_validate_typeerror():
