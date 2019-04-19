@@ -18,9 +18,16 @@ def test_field_infer_function_type():
     assert my_field.args[1].type is int
 
 
-def test_validate_function_not_implemented():
+def test_field_validate_typeerror():
+    """ Field object should raise a TypeError when validating with wrong type """
+    with pytest.raises(TypeError) as exc_info:
+        my_field = Field("my_field", fieldtype=int)
+        assert not my_field.validate("not an int")
+
+
+def test_field_validate_function_not_implemented():
     """ Field object should raise an exception when validating an undefined function """
     with pytest.raises(MethodNotImplemented) as exc_info:
         args = (Argument("name", str), Argument("num", int))
         my_field = Field("my_field", args=args, returntype=str)
-        my_field.validate({"name": "Simone", "num": 1})
+        assert not my_field.validate({"name": "Simone", "num": 1})
