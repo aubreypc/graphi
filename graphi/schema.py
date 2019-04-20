@@ -59,9 +59,9 @@ class Field:
                     f"Argument to Field.validate must be a dict of arguments when field is a function"
                 )
             for arg in self.args:
-                if arg not in data and not arg.default:
+                if arg.name not in data and not arg.default:
                     raise MissingRequiredArgument(
-                        f"Missing argument {arg} for function {self.name}"
+                        f"Missing argument {arg.name} for function {self.name}"
                     )
         elif not isinstance(data, self.fieldtype):
             raise TypeError(
