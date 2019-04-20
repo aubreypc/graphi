@@ -30,6 +30,17 @@ def test_field_validate_typeerror():
         assert not my_field.validate("not an int")
 
 
+def test_field_validate_function_typeerror():
+    """ Field object should raise a TypeError when validating if wrong type is passed to a function """
+
+    def my_func(num: int) -> int:
+        return num
+
+    with pytest.raises(TypeError) as exc_info:
+        my_field = Field("my_field", func=my_func)
+        assert not my_field.validate({"num": "not an int"})
+
+
 def test_field_validate_function_not_implemented():
     """ Field object should raise an exception when validating an undefined function """
     with pytest.raises(MethodNotImplemented) as exc_info:
