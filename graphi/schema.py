@@ -63,6 +63,10 @@ class Field:
                     raise MissingRequiredArgument(
                         f"Missing argument {arg.name} for function {self.name}"
                     )
+                elif not isinstance(data[arg.name], arg.type):
+                    raise TypeError(
+                        f"Received {type(data[arg.name])} for argument {arg.name}; {arg.type} expected"
+                    )
         elif not isinstance(data, self.fieldtype):
             raise TypeError(
                 f"Received {type(data)} for field {self.name}; {self.fieldtype} expected"
