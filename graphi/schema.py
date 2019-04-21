@@ -84,3 +84,8 @@ class GraphQLType:
                 raise MissingRequiredField(f"{field.name} is a required field")
             field.validate(data[field.name])
         return True
+
+
+class GraphQLSchema:
+    def __init__(self, types: List[GraphQLType]):
+        self.types = types
