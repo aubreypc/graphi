@@ -18,3 +18,11 @@ name TEXT,
 age INTEGER
 );"""
     assert ctx.create_tables() == expected
+
+
+def test_block_to_sql(setup_person_query):
+    ctx, block = setup_person_query()
+    query1 = block.children[0]
+    expected = "SELECT name, age FROM person WHERE id=1;"
+    # TODO: to get passing, need to implement argument parsing so query1.args == {"id": 1}
+    assert query1.to_sql() == expected
