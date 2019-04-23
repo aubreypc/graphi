@@ -86,7 +86,8 @@ class GraphQLType:
             field.validate(data[field.name])
         return True
 
-
-class GraphQLSchema:
-    def __init__(self, types: List[GraphQLType]):
-        self.types = types
+    def field(self, fieldname):
+        for field in self.fields:
+            if field.name == fieldname:
+                return field
+        return None
