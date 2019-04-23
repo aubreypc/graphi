@@ -10,7 +10,7 @@ class GraphQLParser:
     def __init__(self, ctx: GraphQLContext):
         self.context = ctx
 
-    def parse(self, s: str) -> Iterator[GraphQLBlock]:
+    def parse(self, s: str) -> GraphQLBlock:
         blocks = []
         for line in s.split("\n"):
             line = self._remove_comment(line)
@@ -33,12 +33,12 @@ class GraphQLParser:
             elif match_end_of_block:
                 next_block = blocks.pop()
                 if blocks:
-                    blocks[-1].attrs.append(next_block)
-                yield next_block
+                    blocks[-1].children.append(next_block)
+                else:
+                    return next_block
             elif match_block_attr:
                 if blocks:
-                    print(f"Adding line {line} to block {blocks[-1]}")
-                blocks[-1].attrs.append(line)  # TODO: should do a regex for single word
+                    blocks[-1].attrs.append(line)
             elif match_fragment:
                 # TODO: handle fragments
                 pass

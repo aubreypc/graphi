@@ -16,9 +16,14 @@ class GraphQLContext:
 
 class GraphQLBlock:
     def __init__(
-        self, attrs: List[str] = None, blocktype: GraphQLType = None, operation=None
+        self,
+        attrs: List[str] = None,
+        children: List[GraphQLType] = None,
+        blocktype: GraphQLType = None,
+        operation=None,
     ):
         self.attrs = [] if attrs is None else attrs
+        self.children = [] if children is None else children
         self.blocktype = blocktype
         self.operation = operation
 

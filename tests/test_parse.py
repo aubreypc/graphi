@@ -35,7 +35,7 @@ def test_parse_block():
     ctx = GraphQLContext([person])
     parser = GraphQLParser(ctx)
 
-    blocks = parser.parse(
+    block = parser.parse(
         """
     {
         person(id: 1){
@@ -49,10 +49,16 @@ def test_parse_block():
     }
     """
     )
-    blocks = [block for block in blocks]
-    print([(block, block.blocktype.name, block.attrs) for block in blocks])
-    assert isinstance(blocks[0], GraphQLBlock)
-    assert blocks[0].blocktype.name == "person"
-    assert blocks[0].attrs[0] == "name"
-    assert blocks[0].attrs[1] == "age"
-    assert blocks[1].attrs[0] == "age"
+    assert isinstance(block, GraphQLBlock)
+    assert block.blocktype.name is None
+    assert len(block.attrs) == 0
+    assert len(block.children) == 2
+
+    person_1 = block.children[0]
+    assert person_1.blocktype.name == "person"
+    assert person_1.attrs[0] == "name"
+    assert person_1.attrs[1] == "age"
+
+    person_2 = block.children[1]
+    assert person_2.blocktype.name == "person"
+    assert person_2.attrs[0] == "age"
