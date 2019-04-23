@@ -28,27 +28,8 @@ def test_match_start_of_block():
     assert not parser._match_start_of_block("")
 
 
-def test_parse_block():
-    name = Field("name", fieldtype=str, nullable=False)
-    age = Field("age", fieldtype=int, nullable=False)
-    person = GraphQLType([name, age])
-    ctx = GraphQLContext([person])
-    parser = GraphQLParser(ctx)
-
-    block = parser.parse(
-        """
-    {
-        person(id: 1){
-            name
-            age
-        }
-
-        person(id: 2) {
-            age
-        }
-    }
-    """
-    )
+def test_parse_block(setup_person_query):
+    ctx, block = setup_person_query()
     assert isinstance(block, GraphQLBlock)
     assert block.blocktype.name is None
     assert len(block.attrs) == 0
