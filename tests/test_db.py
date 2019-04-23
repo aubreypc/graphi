@@ -23,6 +23,11 @@ age INTEGER
 def test_block_to_sql(setup_person_query):
     ctx, block = setup_person_query()
     query1 = block.children[0]
-    expected = "SELECT name, age FROM person WHERE id=1;"
-    # TODO: to get passing, need to implement argument parsing so query1.args == {"id": 1}
-    assert query1.to_sql() == expected
+    expected1 = "SELECT name, age FROM person WHERE id=1;"
+    assert query1.to_sql() == expected1
+
+    query2 = block.children[1]
+    expected2 = "SELECT age FROM person WHERE id=2;"
+    assert query2.to_sql() == expected2
+
+    assert block.to_sql() == f"{expected1}\n{expected2}"

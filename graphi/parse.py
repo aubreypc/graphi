@@ -25,7 +25,10 @@ class GraphQLParser:
 
             if match_start_of_block:
                 operation, block_name, block_args = match_start_of_block.groups()
-                inferred_blocktype = GraphQLType(name=block_name)
+                if block_name:
+                    inferred_blocktype = GraphQLType(name=block_name)
+                else:
+                    inferred_blocktype = None
                 if block_args:
                     block_args = self._parse_arguments(block_args)
                 new_block = GraphQLBlock(

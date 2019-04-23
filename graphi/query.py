@@ -25,6 +25,9 @@ class GraphQLBlock:
         self.operation = operation
 
     def to_sql(self):
+        if self.children and not self.blocktype:
+            # Outermost block of query: return sum of child queries
+            return "\n".join([child.to_sql() for child in self.children])
         if self.attrs and not self.children:
             attrs_string = ", ".join([attr for attr in self.attrs])
             where = ""

@@ -31,7 +31,7 @@ def test_match_start_of_block():
 def test_parse_block(setup_person_query):
     ctx, block = setup_person_query()
     assert isinstance(block, GraphQLBlock)
-    assert block.blocktype.name is None
+    assert block.blocktype is None
     assert len(block.attrs) == 0
     assert len(block.children) == 2
 
