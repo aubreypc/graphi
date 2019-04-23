@@ -35,3 +35,42 @@ def setup_person_query():
             )
 
     return _setup_fn
+
+
+@pytest.fixture
+def setup_person_pet_query():
+    person_name = Field("name", fieldtype=str, nullable=False)
+    person_age = Field("age", fieldtype=int, nullable=False)
+    person = GraphQLType([person_name, person_age], name="person")
+
+    pet_name = Field("name", fieldtype=str, nullable=False)
+    pet_species = Field("species", fieldtype=str, nullable=False)
+    pet_owner = Field("owner", fieldtype=person, nullable=False)
+    pet = GraphQLType([pet_name, pet_species, pet_owner], name="pet")
+
+    ctx = GraphQLContext([person, pet])
+    parser = GraphQLParser(ctx)
+
+    def _setup_fn(*args):
+        if args:
+            return ctx, parser.parse(args[0])
+        else:
+            return (
+                ctx,
+                parser.parse(
+                    """
+    {
+        pet(id: 1){
+            name
+            species
+            owner {
+                name
+                age
+            }
+        }
+    }
+    """
+                ),
+            )
+
+    return _setup_fn
