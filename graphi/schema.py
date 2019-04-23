@@ -75,8 +75,9 @@ class Field:
 
 
 class GraphQLType:
-    def __init__(self, fields: List[Field]):
-        self.fields = fields
+    def __init__(self, fields: List[Field] = None, name: str = None):
+        self.fields = [] if fields is None else fields
+        self.name = name
 
     def validate(self, data: Dict):
         for field in self.fields:

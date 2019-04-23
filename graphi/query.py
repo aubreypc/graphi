@@ -15,9 +15,13 @@ class GraphQLContext:
 
 
 class GraphQLBlock:
-    def __init__(self, attrs: List[str] = None, blocktype: GraphQLType = None):
+    def __init__(
+        self, attrs: List[str] = None, blocktype: GraphQLType = None, operation=None
+    ):
         self.attrs = [] if attrs is None else attrs
         self.blocktype = blocktype
+        self.operation = operation
+
 
 class GraphQLExpression:
     def __init__(self):
