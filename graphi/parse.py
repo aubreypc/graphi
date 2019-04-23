@@ -3,7 +3,7 @@
 import re
 from graphi.schema import GraphQLType, Field
 from graphi.query import GraphQLContext, GraphQLBlock
-from typing import List, Iterator
+from typing import List, Iterator, Dict
 
 
 class GraphQLParser:
@@ -26,8 +26,10 @@ class GraphQLParser:
             if match_start_of_block:
                 operation, block_name, block_args = match_start_of_block.groups()
                 inferred_blocktype = GraphQLType(name=block_name)
+                if block_args:
+                    block_args = self._parse_arguments(block_args)
                 new_block = GraphQLBlock(
-                    blocktype=inferred_blocktype, operation=operation
+                    blocktype=inferred_blocktype, operation=operation, args=block_args
                 )
                 blocks.append(new_block)
             elif match_end_of_block:
@@ -64,3 +66,14 @@ class GraphQLParser:
         if "#" in line:
             return line.partition("#")[0].strip()
         return line.strip()
+
+    def _parse_arguments(self, arguments: str) -> Dict:
+        arguments = arguments[1:-1]  # Strip parentheses
+        arguments = arguments.split(",")
+        parsed_args = {}
+        for argpair in arguments:
+            assert ":" in argpair
+            key, _, val = argpair.partition(":")
+            key, val = key.strip(), val.strip()
+            parsed_args[key] = val
+        return parsed_args
