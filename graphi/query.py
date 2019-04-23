@@ -28,14 +28,27 @@ class GraphQLBlock:
         if self.children and not self.blocktype:
             # Outermost block of query: return sum of child queries
             return "\n".join([child.to_sql() for child in self.children])
-        if self.attrs and not self.children:
+        if self.attrs:
             attrs_string = ", ".join([attr for attr in self.attrs])
             where = ""
+            nested = ""
+            if self.children:
+                child_queries = []
+                for child in self.children:
+                    child.args["id"] = f"{self.blocktype.name}.{child.blocktype.name}"
+                    # TODO: child's inferred blocktype is wrong
+                    # TODO: need to look up correct blocktype via schema?
+                    nested_query_on_attr = self.blocktype.field(child.blocktype.name)
+                    if nested_query_on_attr:
+                        child.blocktype = nested_query_on_attr.fieldtype
+                    child_query = child.to_sql()[0:-1]  # Strip the semicolon
+                    child_queries.append(f"({child_query})")
+                nested = ", " + ", ".join(child_queries)
             if self.args:
                 args = [f"{arg}={val}" for arg, val in self.args.items()]
                 args_string = ", ".join(args)
                 where = f" WHERE {args_string}"
-            return f"SELECT {attrs_string} FROM {self.blocktype.name}{where};"
+            return f"SELECT {attrs_string}{nested} FROM {self.blocktype.name}{where};"
 
 
 class GraphQLContext:
@@ -54,7 +67,10 @@ class GraphQLContext:
                     # TODO: nullable?
                 else:
                     # TODO: foreign key
-                    pass
+                    fields.append(f"{field.name} INTEGER")
+                    fields.append(
+                        f"FOREIGN KEY({field.name}) REFERENCES {field.blocktype.name}(id)"
+                    )
             fields_string = ",\n".join(fields)
             statements.append(
                 f"CREATE TABLE IF NOT EXISTS {t.name} (\n{fields_string}\n);"
