@@ -36,11 +36,10 @@ class GraphQLBlock:
                 child_queries = []
                 for child in self.children:
                     child.args["id"] = f"{self.blocktype.name}.{child.blocktype.name}"
-                    # TODO: child's inferred blocktype is wrong
-                    # TODO: need to look up correct blocktype via schema?
-                    nested_query_on_attr = self.blocktype.field(child.blocktype.name)
-                    if nested_query_on_attr:
-                        child.blocktype = nested_query_on_attr.fieldtype
+                    # Correct child's inferred block type if it refers to parent's field
+                    parent_field = self.blocktype.field(child.blocktype.name)
+                    if parent_field:
+                        child.blocktype = parent_field.fieldtype
                     child_query = child.to_sql()[0:-1]  # Strip the semicolon
                     child_queries.append(f"({child_query})")
                 nested = ", " + ", ".join(child_queries)
