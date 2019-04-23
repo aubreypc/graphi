@@ -26,7 +26,10 @@ class GraphQLParser:
             if match_start_of_block:
                 operation, block_name, block_args = match_start_of_block.groups()
                 if block_name:
-                    inferred_blocktype = GraphQLType(name=block_name)
+                    if block_name in self.context.types:
+                        inferred_blocktype = self.context.types[block_name]
+                    else:
+                        inferred_blocktype = GraphQLType(name=block_name)
                 else:
                     inferred_blocktype = None
                 if block_args:
