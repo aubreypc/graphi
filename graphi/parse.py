@@ -2,15 +2,15 @@
 
 import re
 from graphi.schema import GraphQLType, Field
-from graphi.query import GraphQLContext, GraphQLBlock
+from graphi.block import GraphQLBlock
 from typing import List, Iterator, Dict
 
 
 class GraphQLParser:
-    def __init__(self, ctx: GraphQLContext):
-        self.context = ctx
+    def __init__(self, context):
+        self.context = context
 
-    def parse(self, s: str) -> GraphQLBlock:
+    def parse(self, s: str):
         blocks = []
         for line in s.split("\n"):
             line = self._remove_comment(line)

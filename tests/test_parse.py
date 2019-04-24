@@ -2,7 +2,8 @@
 
 import pytest
 from graphi.schema import GraphQLType, Field, Argument
-from graphi.query import GraphQLContext, GraphQLQuery, GraphQLBlock
+from graphi.query import GraphQLContext, GraphQLQuery
+from graphi.block import GraphQLBlock
 from graphi.parse import GraphQLParser
 
 

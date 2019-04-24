@@ -1,6 +1,8 @@
 """ API for parsing and evaluating GraphQL queries"""
 
+import sqlite3
 from typing import List, Dict
+from graphi.parse import GraphQLParser
 from graphi.schema import GraphQLType
 
 
@@ -9,50 +11,15 @@ class GraphQLQuery:
         pass
 
 
-class GraphQLBlock:
-    def __init__(
-        self,
-        attrs: List[str] = None,
-        args: Dict = None,
-        children: List[GraphQLType] = None,
-        blocktype: GraphQLType = None,
-        operation=None,
-    ):
-        self.attrs = [] if attrs is None else attrs
-        self.args = {} if args is None else args
-        self.children = [] if children is None else children
-        self.blocktype = blocktype
-        self.operation = operation
-
-    def to_sql(self):
-        if self.children and not self.blocktype:
-            # Outermost block of query: return sum of child queries
-            return "\n".join([child.to_sql() for child in self.children])
-        if self.attrs:
-            attrs_string = ", ".join([attr for attr in self.attrs])
-            where = ""
-            nested = ""
-            if self.children:
-                child_queries = []
-                for child in self.children:
-                    child.args["id"] = f"{self.blocktype.name}.{child.blocktype.name}"
-                    # Correct child's inferred block type if it refers to parent's field
-                    parent_field = self.blocktype.field(child.blocktype.name)
-                    if parent_field:
-                        child.blocktype = parent_field.fieldtype
-                    child_query = child.to_sql()[0:-1]  # Strip the semicolon
-                    child_queries.append(f"({child_query})")
-                nested = ", " + ", ".join(child_queries)
-            if self.args:
-                args = [f"{arg}={val}" for arg, val in self.args.items()]
-                args_string = ", ".join(args)
-                where = f" WHERE {args_string}"
-            return f"SELECT {attrs_string}{nested} FROM {self.blocktype.name}{where};"
-
-
 class GraphQLContext:
-    def __init__(self, types: List[GraphQLType]):
+    def __init__(self, types: List[GraphQLType], conn: sqlite3.Connection = None):
         self.types = {t.name: t for t in types}
+        self.parser = GraphQLParser(self)
+        if conn:
+            cursor = conn.cursor()
+            cursor.execute(self.create_tables())
+            conn.commit()
+        self.conn = conn
 
     def create_tables(self):
         """ Performs SQL table setup for each defined GraphQL type """
@@ -76,6 +43,10 @@ class GraphQLContext:
             )
         return "\n".join(statements)
 
-    def resolve(self, block: GraphQLBlock):
-        """ Attempts to execute a query or mutation """
-        pass
+    def execute(self, graphql_str: str):
+        """ Executes GraphQL input """
+        block = self.parser.parse(graphql_str)
+        sql_command = block.to_sql()
+        cursor = self.conn.cursor()
+        result = cursor.execute(sql_command)
+        return result

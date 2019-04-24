@@ -9,7 +9,7 @@ def test_resolve(setup_person_query):
     assert ctx.resolve(block) is True
 
 
-def test_create_tables(setup_person_query):
+def test_create_tables(setup_person_query, setup_temp_db):
     ctx, block = setup_person_query()
     expected = """\
 CREATE TABLE IF NOT EXISTS person (

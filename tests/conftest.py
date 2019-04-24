@@ -1,7 +1,15 @@
 import pytest
+import sqlite3 as sqlite
 from graphi.schema import GraphQLType, Field, Argument
-from graphi.query import GraphQLContext, GraphQLQuery, GraphQLBlock
+from graphi.query import GraphQLContext, GraphQLQuery
+from graphi.block import GraphQLBlock
 from graphi.parse import GraphQLParser
+
+
+@pytest.fixture(scope="function")
+def setup_temp_db(tmp_path):
+    conn = sqlite.connect(str(tmp_path / "data.db"))
+    return conn
 
 
 @pytest.fixture
