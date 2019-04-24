@@ -7,17 +7,12 @@ from graphi.parse import GraphQLParser
 
 
 @pytest.fixture(scope="function")
-def setup_temp_db(tmp_path):
+def setup_person_query(tmp_path):
     conn = sqlite.connect(str(tmp_path / "data.db"))
-    return conn
-
-
-@pytest.fixture
-def setup_person_query():
     name = Field("name", fieldtype=str, nullable=False)
     age = Field("age", fieldtype=int, nullable=False)
     person = GraphQLType([name, age], name="person")
-    ctx = GraphQLContext([person])
+    ctx = GraphQLContext([person], conn=conn)
     parser = GraphQLParser(ctx)
 
     def _setup_fn(*args):
@@ -45,8 +40,9 @@ def setup_person_query():
     return _setup_fn
 
 
-@pytest.fixture
-def setup_person_pet_query():
+@pytest.fixture(scope="function")
+def setup_person_pet_query(tmp_path):
+    conn = sqlite.connect(str(tmp_path / "data.db"))
     person_name = Field("name", fieldtype=str, nullable=False)
     person_age = Field("age", fieldtype=int, nullable=False)
     person = GraphQLType([person_name, person_age], name="person")
@@ -56,7 +52,7 @@ def setup_person_pet_query():
     pet_owner = Field("owner", fieldtype=person, nullable=False)
     pet = GraphQLType([pet_name, pet_species, pet_owner], name="pet")
 
-    ctx = GraphQLContext([person, pet])
+    ctx = GraphQLContext([person, pet], conn=conn)
     parser = GraphQLParser(ctx)
 
     def _setup_fn(*args):

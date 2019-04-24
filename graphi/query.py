@@ -17,7 +17,7 @@ class GraphQLContext:
         self.parser = GraphQLParser(self)
         if conn:
             cursor = conn.cursor()
-            cursor.execute(self.create_tables())
+            cursor.executescript(self.create_tables())
             conn.commit()
         self.conn = conn
 
@@ -35,7 +35,7 @@ class GraphQLContext:
                     # TODO: foreign key
                     fields.append(f"{field.name} INTEGER")
                     fields.append(
-                        f"FOREIGN KEY({field.name}) REFERENCES {field.blocktype.name}(id)"
+                        f"FOREIGN KEY({field.name}) REFERENCES {field.fieldtype.name}(id)"
                     )
             fields_string = ",\n".join(fields)
             statements.append(
@@ -48,5 +48,5 @@ class GraphQLContext:
         block = self.parser.parse(graphql_str)
         sql_command = block.to_sql()
         cursor = self.conn.cursor()
-        result = cursor.execute(sql_command)
+        result = cursor.executescript(sql_command)
         return result
