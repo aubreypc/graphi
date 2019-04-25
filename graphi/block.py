@@ -1,3 +1,4 @@
+import sqlite3
 from graphi.schema import GraphQLType
 from typing import List, Dict
 
@@ -19,25 +20,51 @@ class GraphQLBlock:
 
     def to_sql(self):
         if self.children and not self.blocktype:
-            # Outermost block of query: return sum of child queries
+            # Outermost block of query: return all child queries
             return "\n".join([child.to_sql() for child in self.children])
         if self.attrs:
-            attrs_string = ", ".join([attr for attr in self.attrs])
             where = ""
-            nested = ""
-            if self.children:
-                child_queries = []
-                for child in self.children:
-                    child.args["id"] = f"{self.blocktype.name}.{child.blocktype.name}"
-                    # Correct child's inferred block type if it refers to parent's field
-                    parent_field = self.blocktype.field(child.blocktype.name)
-                    if parent_field:
-                        child.blocktype = parent_field.fieldtype
-                    child_query = child.to_sql()[0:-1]  # Strip the semicolon
-                    child_queries.append(f"({child_query})")
-                nested = ", " + ", ".join(child_queries)
+            select_string = ", ".join(
+                self.attrs + [child.blocktype.name for child in self.children]
+            )
             if self.args:
                 args = [f"{arg}={val}" for arg, val in self.args.items()]
                 args_string = ", ".join(args)
                 where = f" WHERE {args_string}"
-            return f"SELECT {attrs_string}{nested} FROM {self.blocktype.name}{where};"
+            return f"SELECT {select_string} FROM {self.blocktype.name}{where};"
+
+    def resolve(self, conn: sqlite3.Connection, is_root=True):
+        if is_root and not self.attrs:
+            # Outermost block of query: return all child queries
+            if len(self.children) > 1:
+                return {
+                    "data": [
+                        child.resolve(conn, is_root=False) for child in self.children
+                    ]
+                }
+            return {"data": self.children[0].resolve(conn, is_root=False)}
+        elif not self.children and not self.attrs:
+            # No attrs or foreign keys; no need to query
+            return {}
+        cursor = conn.cursor()
+        sql_cmd = self.to_sql()
+        query = cursor.execute(sql_cmd)
+        query_description = [t[0] for t in query.description]
+        # TODO: could be multiple result if many-to-one; can't just fetchone()
+        query_data = {
+            attr: val for attr, val in zip(query_description, query.fetchone())
+        }
+        data = {attr: query_data[attr] for attr in self.attrs}
+        for child in self.children:
+            # Use parent's foreign key to locate child by id
+            child.args["id"] = query_data[child.blocktype.name]
+            # Correct child's inferred block type if it refers to parent's field
+            queried_field_name = child.blocktype.name
+            parent_field = self.blocktype.field(queried_field_name)
+            if parent_field:
+                child.blocktype = parent_field.fieldtype
+            resolved = child.resolve(conn, is_root=False)
+            data[queried_field_name] = child.resolve(conn, is_root=False)
+        if is_root:
+            return {"data": data}
+        return data

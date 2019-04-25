@@ -55,6 +55,11 @@ def setup_person_pet_query(tmp_path):
     ctx = GraphQLContext([person, pet], conn=conn)
     parser = GraphQLParser(ctx)
 
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO person VALUES (1, 'Aubrey', 21);")
+    cursor.execute("INSERT INTO pet VALUES (1, 'Annabelle', 'cat', 1);")
+    conn.commit()
+
     def _setup_fn(*args):
         if args:
             return ctx, parser.parse(args[0])

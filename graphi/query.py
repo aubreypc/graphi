@@ -15,11 +15,11 @@ class GraphQLContext:
     def __init__(self, types: List[GraphQLType], conn: sqlite3.Connection = None):
         self.types = {t.name: t for t in types}
         self.parser = GraphQLParser(self)
+        self.conn = conn
         if conn:
             cursor = conn.cursor()
             cursor.executescript(self.create_tables())
             conn.commit()
-        self.conn = conn
 
     def create_tables(self):
         """ Performs SQL table setup for each defined GraphQL type """
@@ -43,10 +43,7 @@ class GraphQLContext:
             )
         return "\n".join(statements)
 
-    def execute(self, graphql_str: str):
+    def execute(self, conn: sqlite3.Connection, graphql_str: str):
         """ Executes GraphQL input """
         block = self.parser.parse(graphql_str)
-        sql_command = block.to_sql()
-        cursor = self.conn.cursor()
-        result = cursor.executescript(sql_command)
-        return result
+        return block.resolve(conn)

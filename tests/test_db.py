@@ -28,7 +28,20 @@ def test_block_to_sql(setup_person_query):
     assert block.to_sql() == f"{expected1}\n{expected2}"
 
 
+@pytest.mark.skip(reason="Deprecated")
 def test_nested_block_to_sql(setup_person_pet_query):
     ctx, block = setup_person_pet_query()
     expected = "SELECT name, species, (SELECT name, age FROM person WHERE id=pet.owner) FROM pet WHERE id=1;"
     assert block.to_sql() == expected
+
+
+def test_resolve_block(setup_person_pet_query):
+    ctx, block = setup_person_pet_query()
+    expected = {
+        "data": {
+            "name": "Annabelle",
+            "species": "cat",
+            "owner": {"name": "Aubrey", "age": 21},
+        }
+    }
+    assert block.resolve(ctx.conn) == expected
